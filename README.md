@@ -2,7 +2,7 @@
 Slurm
 ========
 
-This project sets up an auto-scaling Slurm cluster
+This project sets up an auto-scaling Slurm cluster, create slurm Login node, Suport DSVM Ubuntu 20.04
 Slurm is a highly configurable open source workload manager. See the [Slurm project site](https://www.schedmd.com/) for an overview.
 
 ## Slurm Clusters in CycleCloud versions >= 7.8
