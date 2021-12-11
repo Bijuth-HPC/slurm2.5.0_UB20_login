@@ -148,8 +148,8 @@ defer_block "Defer starting slurmd until end of converge" do
   # set the ip as nodeaddr and hostname in slurm
   execute 'set node to active' do
     # no longer set hostname/nodeaddr. cyclecloud_slurm.py on the slurmctld host will do this.
-    command "scontrol update nodename=#{nodename} state=UNDRAIN && touch /etc/slurm.reenabled"
-    creates '/etc/slurm.reenabled'
+#    command "scontrol update nodename=#{nodename} state=UNDRAIN && touch /etc/slurm.reenabled"
+#    creates '/etc/slurm.reenabled'
   end
 end
 
