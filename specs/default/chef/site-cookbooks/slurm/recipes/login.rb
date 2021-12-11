@@ -4,10 +4,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+#
+# Cookbook Name:: slurm
+# Recipe:: execute
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 if node[:slurm][:ensure_waagent_monitor_hostname] then
   execute 'ensure hostname monitoring' do
     command 'sed -i s/Provisioning.MonitorHostName=n/Provisioning.MonitorHostName=y/g  /etc/waagent.conf && systemctl restart walinuxagent'
-    only_if "grep -Eq '^Provisioning.MonitorHostName=n$' /etc/waagent.conf" 
+    only_if "grep -Eq '^Provisioning.MonitorHostName=n$' /etc/waagent.conf"
   end
 end
 
@@ -27,7 +33,7 @@ end
 
 
 filenames = ["slurm_healthcheck.py", "healthcheck.logging.conf"]
-filenames.each do |filename| 
+filenames.each do |filename|
     cookbook_file "#{autoscale_dir}/#{filename}" do
         source "#{filename}"
         mode "0644"
@@ -43,6 +49,7 @@ if node[:slurm][:use_nodename_as_hostname] then
     creates '/etc/slurm.hostname.#{nodename}.enabled'
   end
 end
+
 
 include_recipe "slurm::default"
 require 'chef/mixin/shell_out'
@@ -91,19 +98,20 @@ end
 
 defer_block "Defer starting slurmd until end of converge" do
   slurmd_sysconfig="SLURMD_OPTIONS=-N #{nodename}"
+  if node[:slurm][:use_nodename_as_hostname] then
+    cmd_str = "getent hosts #{node[:cyclecloud][:instance][:ipv4]} | grep -q #{nodename}"
+    cmd = Mixlib::ShellOut.new(cmd_str)
+    cmd.run_command
+    if !cmd.exitstatus.zero?
+      raise "Hostname has not registered in DNS yet."
+    end
 
-  cmd_str = "getent hosts #{node[:cyclecloud][:instance][:ipv4]} | grep -q #{nodename}"
-  cmd = Mixlib::ShellOut.new(cmd_str)
-  cmd.run_command
-  if !cmd.exitstatus.zero?
-    raise "Hostname has not registered in DNS yet."
-  end
-
-  cmd_str = "hostname | grep -q #{nodename}"
-  cmd = Mixlib::ShellOut.new(cmd_str)
-  cmd.run_command
-  if !cmd.exitstatus.zero?
-    raise "Hostname has not registered locally yet."
+    cmd_str = "hostname | grep -q #{nodename}"
+    cmd = Mixlib::ShellOut.new(cmd_str)
+    cmd.run_command
+    if !cmd.exitstatus.zero?
+      raise "Hostname has not registered locally yet."
+    end
   end
 
   myplatform=node[:platform]
@@ -112,7 +120,7 @@ defer_block "Defer starting slurmd until end of converge" do
     directory '/etc/sysconfig' do
       action :create
     end
-    
+
     file '/etc/sysconfig/slurmd' do
       content slurmd_sysconfig
       mode '0700'
@@ -140,7 +148,8 @@ defer_block "Defer starting slurmd until end of converge" do
   # set the ip as nodeaddr and hostname in slurm
   execute 'set node to active' do
     # no longer set hostname/nodeaddr. cyclecloud_slurm.py on the slurmctld host will do this.
-#    command "scontrol update nodename=#{nodename} state=UNDRAIN && touch /etc/slurm.reenabled"
-#    creates '/etc/slurm.reenabled'
+    command "scontrol update nodename=#{nodename} state=UNDRAIN && touch /etc/slurm.reenabled"
+    creates '/etc/slurm.reenabled'
   end
 end
+
