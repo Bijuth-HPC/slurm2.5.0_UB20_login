@@ -2,7 +2,8 @@
 Slurm
 ========
 
-This project sets up an auto-scaling Slurm cluster, create slurm Login node
+This custome project sets up an auto-scaling Slurm cluster, Create slurm Login node.
+
 Slurm is a highly configurable open source workload manager. See the [Slurm project site](https://www.schedmd.com/) for an overview.
 
 ## Slurm Clusters in CycleCloud versions >= 7.8
